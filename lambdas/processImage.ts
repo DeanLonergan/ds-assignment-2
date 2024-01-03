@@ -36,7 +36,7 @@ export const handler: SQSHandler = async (event) => {
                 const imageType = typeMatch[1].toLowerCase();
                 if (imageType != "jpeg" && imageType != "png") {
                     console.log(`Unsupported image type: ${imageType}`);
-                    throw new Error("Unsupported image type: ${imageType. ");
+                    throw new Error(`Unsupported image type: ${imageType}`);
                 }
                 // process image upload
                 const commandOutput = await ddbClient.send(
@@ -47,7 +47,6 @@ export const handler: SQSHandler = async (event) => {
                         }
                     })
                 );
-
                 console.log("Image Added to Table:" + commandOutput)
             }
         }
