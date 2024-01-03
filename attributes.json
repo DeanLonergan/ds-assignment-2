@@ -1,0 +1,10 @@
+{
+    "object_name": {
+        "DataType": "String",
+        "StringValue": "fileName"
+    },
+    "image_description": {
+        "DataType": "String",
+        "StringValue": "Caption"
+    }
+}

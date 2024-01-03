@@ -8,7 +8,7 @@ import {
     S3Client,
     PutObjectCommand,
 } from "@aws-sdk/client-s3";
-import { DeleteCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { UpdateCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
 const s3 = new S3Client();
@@ -21,18 +21,20 @@ export const handler: SNSHandler = async (event) => {
     console.log("Record Body => ", recordBody)
     const message = JSON.parse(recordBody.Message)
     console.log('Raw SNS message ',message)
-    for (const mess of message.Records){
-        const key = mess.s3.object.key
-        console.log("Key =>", key)
         await ddbClient.send(
-            new DeleteCommand({
-              TableName: process.env.TABLE_NAME,
-              Key: {
-                  fileName: key
-              }
-            })
+            new UpdateCommand(
+                {
+                    TableName: process.env.TABLE_NAME,
+                    Key: {
+                        fileName: message.name
+                    },
+                    UpdateExpression: "set content = :content",
+                    ExpressionAttributeValues: {
+                        ":content": message.description
+                    }
+                }
+            )
           )
-      }
     }
 };
 

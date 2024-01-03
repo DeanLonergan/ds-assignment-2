@@ -6,8 +6,6 @@ __Student Number:__ 20092570
 
 __YouTube Demo link__ - [The URL of your demonstration of the app.]
 
-[ Note: The video must include an audio.]
-
 ### Phase 1.
 
 + Confirmation Mailer - Fully implemented.
@@ -16,10 +14,7 @@ __YouTube Demo link__ - [The URL of your demonstration of the app.]
 
 ### Phase 2 (if relevant).
 
-+ Process Delete - Fully implemented.
++ Process Delete - Partially implemented.
 + Update Table - Not implemented.
-
-### Phase 3 (if relevant).
-
 
 aws s3 cp test.txt s3://a-bucket/test.txt --metadata '{"x-amz-meta-cms-id":"34533452"}'

@@ -44,8 +44,8 @@ export class EDAAppStack extends cdk.Stack {
       }
     });
 
-    const newImageTopic = new sns.Topic(this, "NewImageTopic", {
-      displayName: "New Image topic",
+    const imageTopic = new sns.Topic(this, "ImageTopic", {
+      displayName: "Image topic",
     });
 
     const deleteImageTopic = new sns.Topic(this, "deleteImageTopic", {
@@ -84,6 +84,21 @@ export class EDAAppStack extends cdk.Stack {
       }
     );
 
+    const updateImageFn = new lambdanode.NodejsFunction(
+      this,
+      "UpdateImageFn",
+      {
+        // architecture: lambda.Architecture.ARM_64,
+        runtime: lambda.Runtime.NODEJS_18_X,
+        entry: `${__dirname}/../lambdas/updateImage.ts`,
+        timeout: cdk.Duration.seconds(15),
+        memorySize: 128,
+        environment: {
+          TABLE_NAME: imageTable.tableName
+        }
+      }
+    );
+
     const confirmationMailerFn = new lambdanode.NodejsFunction(this, "confirmation-mailer-function", {
       runtime: lambda.Runtime.NODEJS_16_X,
       memorySize: 1024,
@@ -102,13 +117,13 @@ export class EDAAppStack extends cdk.Stack {
 
     imagesBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
-      new s3n.SnsDestination(newImageTopic)  // Changed
+      new s3n.SnsDestination(imageTopic)  // Changed
     );
 
     imagesBucket.addEventNotification(
       s3.EventType.OBJECT_REMOVED,
-      new s3n.SnsDestination(deleteImageTopic)
-    );
+      new s3n.SnsDestination(imageTopic)
+    )
 
     rejectionMailerFn.addEventSource(new events.SqsEventSource(imageDeadLetterQueue, {
       batchSize: 5,
@@ -125,11 +140,35 @@ export class EDAAppStack extends cdk.Stack {
 
     // Subscriptions
 
-    newImageTopic.addSubscription(
+    imageTopic.addSubscription(
+      new subs.LambdaSubscription(deleteImageFn,{
+        filterPolicyWithMessageBody: {
+          Records: sns.FilterOrPolicy.policy({
+            eventName: sns.FilterOrPolicy.filter(
+              sns.SubscriptionFilter.stringFilter({
+                matchPrefixes: ['ObjectRemoved']
+              })
+            )
+          })
+        }
+      } )
+    );
+
+    imageTopic.addSubscription(
+      new subs.LambdaSubscription(updateImageFn, {
+        filterPolicy: {
+          object_name: sns.SubscriptionFilter.stringFilter({
+            matchPrefixes: ['fileName']
+          })
+        }
+      })
+    )
+
+    imageTopic.addSubscription(
       new subs.LambdaSubscription(confirmationMailerFn)
     );
 
-    newImageTopic.addSubscription(
+    imageTopic.addSubscription(
       new subs.SqsSubscription(imageProcessQueue),
     );
 
@@ -142,6 +181,7 @@ export class EDAAppStack extends cdk.Stack {
     imagesBucket.grantRead(processImageFn);
     imageTable.grantReadWriteData(processImageFn);
     imageTable.grantReadWriteData(deleteImageFn);
+    imageTable.grantReadWriteData(updateImageFn);
     imageDeadLetterQueue.grantConsumeMessages(rejectionMailerFn);
 
     confirmationMailerFn.addToRolePolicy(
