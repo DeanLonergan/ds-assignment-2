@@ -11,10 +11,13 @@ __YouTube Demo link__ - [The URL of your demonstration of the app.]
 ### Phase 1.
 
 + Confirmation Mailer - Fully implemented.
-+ Rejection Mailer - Fully implemented.
++ Rejection Mailer - Partially implemented.
 + Process Image - Fully implemented.
 
 ### Phase 2 (if relevant).
+
++ Process Delete - Fully implemented.
++ Update Table - Not implemented.
 
 ### Phase 3 (if relevant).
 
