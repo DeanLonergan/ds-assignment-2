@@ -4,7 +4,7 @@ __Name:__ Dean Lonergan
 
 __Student Number:__ 20092570
 
-__YouTube Demo link__ - [The URL of your demonstration of the app.]
+__YouTube Demo link__ - https://youtu.be/ZEaC-BBy8SY
 
 ### Phase 1.
 
@@ -15,6 +15,6 @@ __YouTube Demo link__ - [The URL of your demonstration of the app.]
 ### Phase 2 (if relevant).
 
 + Process Delete - Partially implemented.
-+ Update Table - Not implemented.
++ Update Table - Partially implemented.
 
 aws s3 cp test.txt s3://a-bucket/test.txt --metadata '{"x-amz-meta-cms-id":"34533452"}'

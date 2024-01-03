@@ -115,38 +115,44 @@ export class EDAAppStack extends cdk.Stack {
 
     // Event triggers
 
+    // When a new object is created in the S3 bucket
     imagesBucket.addEventNotification(
-      s3.EventType.OBJECT_CREATED,
-      new s3n.SnsDestination(imageTopic)  // Changed
+      s3.EventType.OBJECT_CREATED,  // Event type (object creaton)
+      new s3n.SnsDestination(imageTopic)  // Notify the specified SNS topic when an event occurs
     );
 
+    // When an object is removed from the S3 bucket
     imagesBucket.addEventNotification(
-      s3.EventType.OBJECT_REMOVED,
+      s3.EventType.OBJECT_REMOVED,  // Event type (object removal)
       new s3n.SnsDestination(imageTopic)
     )
 
+    // triggered by messages in the imageDeadLetterQueue
     rejectionMailerFn.addEventSource(new events.SqsEventSource(imageDeadLetterQueue, {
       batchSize: 5,
       maxBatchingWindow: cdk.Duration.seconds(10),
       maxConcurrency: 5,
     }));
 
+    // Creates an SQS event source for the imageProcessQueue
     const newImageMailEventSource = new events.SqsEventSource(imageProcessQueue, {
       batchSize: 5,
       maxBatchingWindow: cdk.Duration.seconds(10),
     });
 
+    // Triggered by messages in the imageProcessQueue
     processImageFn.addEventSource(newImageMailEventSource);
 
     // Subscriptions
 
+    // https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html#
     imageTopic.addSubscription(
-      new subs.LambdaSubscription(deleteImageFn,{
-        filterPolicyWithMessageBody: {
+      new subs.LambdaSubscription(deleteImageFn,{ // Define a filter policy based on the message body
+        filterPolicyWithMessageBody: {  // Filters for messages where the event name indicates an object removal
           Records: sns.FilterOrPolicy.policy({
             eventName: sns.FilterOrPolicy.filter(
               sns.SubscriptionFilter.stringFilter({
-                matchPrefixes: ['ObjectRemoved']
+                matchPrefixes: ['ObjectRemoved']  // Only trigger for events that start with ObjectRemoved
               })
             )
           })
@@ -158,7 +164,7 @@ export class EDAAppStack extends cdk.Stack {
       new subs.LambdaSubscription(updateImageFn, {
         filterPolicy: {
           object_name: sns.SubscriptionFilter.stringFilter({
-            matchPrefixes: ['fileName']
+            matchPrefixes: ['fileName'] // Only trigger for messages where the object_name attribute starts with 'fileName'.
           })
         }
       })

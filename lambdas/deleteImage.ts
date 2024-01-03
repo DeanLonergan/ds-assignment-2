@@ -15,24 +15,28 @@ const s3 = new S3Client();
 const ddbClient = createDDbDocClient();
 
 export const handler: SNSHandler = async (event) => {
-  console.log("Event ", event);
-  for (const record of event.Records) {
-    const recordBody = record.Sns;
-    console.log("Record Body => ", recordBody)
-    const message = JSON.parse(recordBody.Message)
-    console.log('Raw SNS message ',message)
-    for (const mess of message.Records){
-        const key = mess.s3.object.key
-        console.log("Key =>", key)
-        await ddbClient.send(
-            new DeleteCommand({
-              TableName: process.env.TABLE_NAME,
-              Key: {
-                  fileName: key
-              }
-            })
-          )
-      }
+    console.log("Event ", event);
+    for (const record of event.Records) {
+
+        const recordBody = record.Sns;
+        console.log("Record Body => ", recordBody)
+
+        const message = JSON.parse(recordBody.Message)  // Parse the SNS message
+        console.log('Raw SNS message ', message)
+
+        for (const mess of message.Records) {   // Process each record in the SNS message
+            const key = mess.s3.object.key  // Extract the S3 object key
+            console.log("Key =>", key)
+
+            await ddbClient.send(   // Send a command to DynamoDB to delete the record associated with the S3 object key
+                new DeleteCommand({
+                    TableName: process.env.TABLE_NAME,
+                    Key: {
+                        fileName: key
+                    }
+                })
+            )
+        }
     }
 };
 

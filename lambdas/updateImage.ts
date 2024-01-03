@@ -19,18 +19,20 @@ export const handler: SNSHandler = async (event) => {
   for (const record of event.Records) {
     const recordBody = record.Sns;
     console.log("Record Body => ", recordBody)
+
     const message = JSON.parse(recordBody.Message)
     console.log('Raw SNS message ',message)
-        await ddbClient.send(
+
+        await ddbClient.send(   // Update the DynamoDB table with the information from the message
             new UpdateCommand(
                 {
-                    TableName: process.env.TABLE_NAME,
+                    TableName: process.env.TABLE_NAME,  // Specify the DynamoDB table name
                     Key: {
-                        fileName: message.name
+                        fileName: message.name  // The key of the item to update
                     },
-                    UpdateExpression: "set content = :content",
+                    UpdateExpression: "set content = :content", // Define the update expression
                     ExpressionAttributeValues: {
-                        ":content": message.description
+                        ":content": message.description // Define the values used in the update expression
                     }
                 }
             )
